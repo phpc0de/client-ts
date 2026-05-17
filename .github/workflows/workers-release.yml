@@ -33,8 +33,7 @@ jobs:
           mkdir -p release
           cp dist/worker.mjs release/worker.mjs
           cp wrangler.toml release/wrangler.toml
-          (cd release && zip -r "cloudflare-workers-${GITHUB_REF_NAME}.zip" worker.mjs wrangler.toml)
-          (cd release && sha256sum "cloudflare-workers-${GITHUB_REF_NAME}.zip" > sha256sums.txt)
+          (cd release && sha256sum worker.mjs wrangler.toml > sha256sums.txt)
 
       - name: Create/Update Release
         env:
@@ -44,6 +43,7 @@ jobs:
             gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes
           fi
           gh release upload "${GITHUB_REF_NAME}" \
-            release/cloudflare-workers-${GITHUB_REF_NAME}.zip \
+            release/worker.mjs \
+            release/wrangler.toml \
             release/sha256sums.txt \
             --clobber
