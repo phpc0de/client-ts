@@ -1,0 +1,12 @@
+{
+  "name": "client-ts-workers-auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:worker": "esbuild src/index.ts --bundle --format=esm --platform=browser --target=es2022 --outfile=../dist/worker.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.10"
+  }
+}

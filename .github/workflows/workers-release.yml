@@ -1,0 +1,49 @@
+name: Release Workers Bundle
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-workers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        working-directory: workers
+        run: npm ci
+
+      - name: Build worker bundle
+        working-directory: workers
+        run: npm run build:worker
+
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p release
+          cp dist/worker.mjs release/worker.mjs
+          cp wrangler.toml release/wrangler.toml
+          (cd release && zip -r "cloudflare-workers-${GITHUB_REF_NAME}.zip" worker.mjs wrangler.toml)
+          (cd release && sha256sum "cloudflare-workers-${GITHUB_REF_NAME}.zip" > sha256sums.txt)
+
+      - name: Create/Update Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes
+          fi
+          gh release upload "${GITHUB_REF_NAME}" \
+            release/cloudflare-workers-${GITHUB_REF_NAME}.zip \
+            release/sha256sums.txt \
+            --clobber
